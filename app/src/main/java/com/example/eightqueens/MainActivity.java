@@ -111,10 +111,31 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-//    protected void update_tile(int i, int j){
-//        View tile= (View) findViewWithTag(""+i+"_"+j);
-//    }
+    protected void draw_board(boolean[][]answer){
+        this.bgrid=answer;
 
+        for(int i=0;i<8;i++){
+            for(int j=0;j<8;j++){
+                if(j%2==0 && i%2==0 ||j%2==1&&i%2==1) {
+                    if(bgrid[i][j]){
+                        buttons[i][j].setBackgroundResource(R.drawable.lp_queen);
+                    }else {
+                        buttons[i][j].setBackgroundResource(R.drawable.lp_tile);
+                    }
+                }else{
+                    if(bgrid[i][j]){
+                        buttons[i][j].setBackgroundResource(R.drawable.dp_queen);
+                    }else {
+                        buttons[i][j].setBackgroundResource(R.drawable.dp_tile);
+                    }
+                }
+            }
+        }
+
+
+    }
+
+    //check place ensures that the position at x, y is a valid move by checking columns, rows and diagonals
     protected boolean check_place(int x, int y){
 
         for(int i=0;i<8;i++){
@@ -142,70 +163,24 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return true;
-
-//
-//        //check columns
-//        for(int i=0; i<8;i++){
-//            if(bgrid[i][y]){
-//                return false;
-//            }
-//        }
-//
-//        //check rows
-//        for(int i=0; i<8;i++){
-//            if(bgrid[x][i]){
-//                return false;
-//            }
-//        }
-//
-//        //check diagonal \
-//        for(int i=x,j=y;i>=0 &&j>=0; i--, j-- ){
-//            if(bgrid[i][j]){
-//                return false;
-//            }
-//        }
-//
-//        for(int i=x,j=y;i>=0 &&j<8; i--, j++ ){
-//            if(bgrid[i][j]){
-//                return false;
-//            }
-//        }
-//
-//        for(int i=x,j=y;i<8 &&j<8; i++, j++ ){
-//            if(bgrid[i][j]){
-//                return false;
-//            }
-//        }
-//        for(int i=x,j=y;i<8 &&j>=0; i++, j-- ){
-//            if(bgrid[i][j]){
-//                return false;
-//            }
-//        }
-//        return true;
     }
 
-    //scan tiles will ensure logical check
-    protected void scan_tiles(){
-        for(int i=0;i<bgrid.length;i++){
-            for(int j=0;j<bgrid[0].length;j++){
 
-            }
-        }
-    }
 
     protected void restart(View v){
-        for(int i=0;i<8;i++){
-            for(int j=0;j<8;j++){
-
-                bgrid[i][j]=false;
-                if(j%2==0 && i%2==0 ||j%2==1&&i%2==1) {
-                    buttons[i][j].setBackgroundResource(R.drawable.lp_tile);
-                }else{
-                    buttons[i][j].setBackgroundResource(R.drawable.dp_tile);
-                }
-
-            }
-        }
+        this.draw_board(new boolean[8][8]);
+//        for(int i=0;i<8;i++){
+//            for(int j=0;j<8;j++){
+//
+//                bgrid[i][j]=false;
+//                if(j%2==0 && i%2==0 ||j%2==1&&i%2==1) {
+//                    buttons[i][j].setBackgroundResource(R.drawable.lp_tile);
+//                }else{
+//                    buttons[i][j].setBackgroundResource(R.drawable.dp_tile);
+//                }
+//
+//            }
+//        }
     }
 
 
