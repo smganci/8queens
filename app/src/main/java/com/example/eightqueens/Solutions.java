@@ -1,4 +1,4 @@
-package sandbox;
+package com.example.eightqueens;
 
 import com.example.eightqueens.Pos;
 
@@ -64,7 +64,8 @@ public class Solutions {
         return true;
     }
 
-    public boolean[][] pairs_to_grid(Pos[] pairs) {
+    public boolean[][] pairs_to_grid(int j) {
+        Pos[] pairs= this.opts[j];
         boolean[][] grid = new boolean[8][8];
 
         for (int i = 0; i < pairs.length; i++) {
@@ -88,7 +89,11 @@ public class Solutions {
 
     public void draw_all() {
         for (int i = 0; i < this.opts.length; i++) {
-            this.draw_grid(this.pairs_to_grid(this.opts[i]));
+            this.draw_grid(this.pairs_to_grid(i));
         }
+    }
+
+    public boolean[][] get_grid_index(int i){
+        return pairs_to_grid(i);
     }
 }

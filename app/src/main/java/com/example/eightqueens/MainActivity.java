@@ -20,45 +20,50 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.example.eightqueens.Options;
+import com.example.eightqueens.Solutions;
 import com.example.eightqueens.Pos;
 
 
 public class MainActivity extends AppCompatActivity {
 
+    //bgrid: 2d boolean array representing placement of queens
     protected boolean[][] bgrid;
-    protected ImageButton[][] buttons;
-    protected boolean invalid_move;
-    protected boolean stop;
-    protected Pos[] options;
-    //idea
-    //list of pairs that you push and pop
 
-    //idea:
-    //hard code the 92 different options and have selector iterate through list
+    //buttons: 2d array of references to ImageButtons
+    protected ImageButton[][] buttons;
+
+    //invalid_move: true if invalid_tile is placed
+    protected boolean invalid_move;
+
+    //stop: true if game has been won
+    protected boolean stop;
+
+    //s: holds Solutions object (runs backtracking algo to generate all possible solutions)
+    protected Solutions s;
+
+    //current: holds current solution number (used in display of next or prev solution)
+    protected int current;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        //create and set view
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         //initialize game variables
-        bgrid= new boolean[8][8];
-        buttons= new ImageButton[8][8];
-        invalid_move=false;
-        stop=false;
-        stop=false;
+        this.bgrid= new boolean[8][8];
+        this.buttons= new ImageButton[8][8];
+        this.invalid_move=false;
+        this.stop=false;
+        this.current=0;
+        this.s=new Solutions();
 
-        //initialize options array
-        ;
 
         //pull linear layout
         ViewGroup linearLayout = (ViewGroup) findViewById(R.id.layout);
 
         //pull grid layout
         GridLayout grid= (GridLayout) findViewById(R.id.grid);
-
-        //pull message box
-        TextView message= (TextView) findViewById(R.id.message_box);
 
         //determine cell size
         int displaywidth=getResources().getDisplayMetrics().widthPixels;
@@ -70,21 +75,23 @@ public class MainActivity extends AppCompatActivity {
                 //create button
                 final ImageButton button= new ImageButton(getApplicationContext());
                 buttons[i][j]=button;
+
                 //set initial background based on row and column
                 draw_tile(i,j);
 
+                //set variables as final to access within button onclick listener
                 final int row=i;
                 final int col=j;
 
                 button.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v){
+                        //call check_and_update method to determine validity of move and update board
                         check_and_update(row, col);
                     }
                 });
 
+                //add button to grid
                 grid.addView((button));
-
-
 
                 //set size of button
                 button.setScaleType(ImageView.ScaleType.FIT_XY);
@@ -92,26 +99,32 @@ public class MainActivity extends AppCompatActivity {
                 layoutParams.height=cell_size;
                 layoutParams.width=cell_size;
                 button.setLayoutParams(layoutParams);
-
-
-                button.setTag("@+/"+i+"_"+j);
-                //set button changing functionality
-
             }
-
-
         }
+    }
 
+    /////////////////////////////////////////////////
+    //GENERAL UTILITY
+    /////////////////////////////////////////////////
+
+    //name: set_message
+    //action: takes in a string and sets the message box to that text
+    protected void set_message(String s){
+        TextView message= (TextView) findViewById(R.id.message_box);
+        message.setText(s);
 
     }
 
-
+    //name: draw_and_set_tile
+    //action: takes in coordinate and boolean, sets bgrid at coordinate to boolean, draws that tile
     protected void draw_and_set_tile(int i, int j, boolean queen){
         bgrid[i][j]=queen;
         draw_tile(i,j);
     }
 
 
+    //name: draw_tile
+    //action: takes in coordinate, depending on bgrid boolean value and coordinate, sets button at coordinate backgroudn image
     protected void draw_tile(int i, int j){
         if(j%2==0 && i%2==0 ||j%2==1&&i%2==1) {
             if(bgrid[i][j]){
@@ -129,6 +142,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    //name: draw_board
+    //action: takes ina new boolean array, sets that to bgrid, redraws every tile on the board
     protected void draw_board(boolean[][]answer){
         this.bgrid=answer;
 
@@ -141,15 +156,90 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    protected boolean check_array(boolean[]b){
-        for(int i=0;i<b.length;i++){
-            if(b[i]){
-                return true;
-            }
+    //name: check_and_update
+    //action: checks validity of placing queen at x and y coordinate--either updates or displays message of invalid
+    public void check_and_update(int x, int y){
+        if(this.stop){
+            return;
         }
-        return false;
+        if(bgrid[x][y]){
+            TextView message= (TextView) findViewById(R.id.message_box);
+            message.setText("You have unselected a queen.");
+            draw_and_set_tile(x,y,false);
+
+        }else if(check_place(x, y)){
+            draw_and_set_tile(x,y,true);
+            // xout(x, y);
+            TextView message= (TextView) findViewById(R.id.message_box);
+            if(this.count_queens()<8){
+                int remaining=8-this.count_queens();
+                message.setText("Good move! Only "+ remaining+ " more Queens to place!");
+            }else{
+                message.setText("You Win!!! Press \"Restart\" to play again!");
+                this.stop=true;
+            }
+
+        }else{
+            //get warning box and update for invalid move
+            TextView message= (TextView) findViewById(R.id.message_box);
+            message.setText("Invalid Move! Try again.");
+        }
     }
 
+    //name: count queens
+    //action: returns a count of all queens stored in bgrid
+    protected int count_queens(){
+        int sum=0;
+        for(int i=0;i<8;i++){
+            for(int j=0;j<8;j++){
+                if(bgrid[i][j]){
+                    sum++;
+                }
+            }
+        }
+        return sum;
+    }
+
+
+
+    ///////////////////////////////////////////////////////////////
+    //BUTTON HANDLERS
+    ///////////////////////////////////////////////////////////////
+
+    //name: restart
+    //action: resets state variables and board
+    protected void restart(View v){
+        this.current=0;
+        this.stop=false;
+        this.draw_board(new boolean[8][8]);
+        this.set_message("");
+    }
+
+    //name: next
+    //action: updates board to next solution
+    protected void next(View v){
+        this.draw_board(s.get_grid_index(this.current));
+        this.set_message("Solution #"+current);
+        this.current++;
+        if(this.current>=92){
+            this.current=0;
+        }
+    }
+
+    //name: prev
+    //action: updates board to prev solution
+    protected void prev(View v){
+        this.draw_board(s.get_grid_index(this.current));
+        this.set_message("Solution #"+current);
+        this.current--;
+        if(this.current<0){
+            this.current=91;
+        }
+
+    }
+
+    //name: give_up
+    //action: finds the closest solution to the current given solution
     protected void give_up(View v){
         boolean [][] solution=new boolean[8][8];
         for(int i=0;i<8;i++){
@@ -157,41 +247,14 @@ public class MainActivity extends AppCompatActivity {
                 solution[i][j]=bgrid[i][j];
             }
         }
-        solve(0,solution);
+      //  solve(0,solution);
         draw_board(solution);
         TextView message= (TextView) findViewById(R.id.message_box);
         message.setText("You have given up");
     }
 
 
-    protected boolean solve(int row, boolean[][]grid){
-        if(row>=grid.length){
-            return true;
-        }
 
-
-        for(int i=0;i<grid.length;i++){
-
-            //check if valid and then return solve
-            if(solve_check(row, i,grid)){
-                grid[row][i]=true;
-
-                boolean temp=solve(row+1,grid);
-                if(temp){
-                    return true;
-                }else{
-                    grid[row][i]=false;
-                }
-            }
-        }
-
-        if(check_array(grid[row])){
-            return solve(row+1, grid);
-        }
-
-
-        return false;
-    }
 
     protected boolean solve_check(int x, int y, boolean[][] grid){
 
@@ -220,28 +283,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return true;
-    }
-
-
-
-    protected void xout(int x, int y){
-        for(int i=0;i<8;i++){
-            for(int j=0;j<8;j++){
-                if(!bgrid[i][j]){
-                    if(i==x){
-                        buttons[i][j].setBackgroundResource(R.color.cran);
-                    }else if(j==y){
-                        buttons[i][j].setBackgroundResource(R.color.cran);
-                    }else if(y-x==j-i){
-                        buttons[i][j].setBackgroundResource(R.color.cran);
-                    }else if(y+x==j+i){
-                        buttons[i][j].setBackgroundResource(R.color.cran);
-                    }
-                }
-
-            }
-        }
-
     }
 
     //check place ensures that the position at x, y is a valid move by checking columns, rows and diagonals
@@ -273,54 +314,5 @@ public class MainActivity extends AppCompatActivity {
 
         return true;
     }
-
-    public void check_and_update(int x, int y){
-        if(this.stop){
-            return;
-        }
-        if(bgrid[x][y]){
-            TextView message= (TextView) findViewById(R.id.message_box);
-            message.setText("You have unselected a queen.");
-            draw_and_set_tile(x,y,false);
-
-        }else if(check_place(x, y)){
-            draw_and_set_tile(x,y,true);
-           // xout(x, y);
-            TextView message= (TextView) findViewById(R.id.message_box);
-            if(this.count_queens()<8){
-                int remaining=8-this.count_queens();
-                message.setText("Good move! Only "+ remaining+ " more Queens to place!");
-            }else{
-                message.setText("You Win!!! Press \"Restart\" to play again!");
-                this.stop=true;
-            }
-
-        }else{
-            //get warning box and update for invalid move
-            TextView message= (TextView) findViewById(R.id.message_box);
-            message.setText("Invalid Move! Try again.");
-        }
-    }
-
-
-    protected void restart(View v){
-        this.stop=false;
-        this.draw_board(new boolean[8][8]);
-        TextView message= (TextView) findViewById(R.id.message_box);
-        message.setText("");
-    }
-
-    protected int count_queens(){
-        int sum=0;
-        for(int i=0;i<8;i++){
-            for(int j=0;j<8;j++){
-                if(bgrid[i][j]){
-                    sum++;
-                }
-            }
-        }
-        return sum;
-    }
-
 
 }

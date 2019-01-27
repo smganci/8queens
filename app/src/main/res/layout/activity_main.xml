@@ -96,15 +96,53 @@
                     android:textColor="@android:color/white"
                     android:textSize="18sp" />
 
-                <Button
-                    android:id="@+id/select_option"
-                    android:layout_width="match_parent"
-                    android:layout_height="45dp"
-                    android:background="@color/cran"
-                    android:text="Select option"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/white"
-                    android:textSize="18sp" />
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:weightSum="1"
+                    android:orientation="horizontal">
+                    <RelativeLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.5">
+
+                        <Button
+                            android:id="@+id/previous"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight=".5"
+                            android:background="@color/next"
+                            android:onClick="prev"
+                            android:text="Previous Solution"
+                            android:textAllCaps="false"
+                            android:textColor="@android:color/white"
+                            android:textSize="10sp" />
+
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.5">
+
+                        <Button
+                            android:id="@+id/next"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="0.5"
+                            android:background="@color/cran"
+                            android:onClick="next"
+                            android:text="Next Solution"
+                            android:textAllCaps="false"
+                            android:textColor="@android:color/white"
+                            android:textSize="10sp" />
+
+                    </RelativeLayout>
+
+
+                </LinearLayout>
+
+
 
 
             </LinearLayout>
